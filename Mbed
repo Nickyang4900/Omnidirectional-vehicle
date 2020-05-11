@@ -1,0 +1,183 @@
+//This code is on Mbed to receive instructions from Arduino and control omnidirectional movement.
+
+#include "mbed.h"       //This file is for Gamepad Controlling 
+
+PwmOut Motor_1p(p21);  //Motor Output
+PwmOut Motor_2p(p22);
+PwmOut Motor_3p(p23);
+PwmOut Motor_4p(p24);
+DigitalOut Motor_1d(p20);
+DigitalOut Motor_2d(p19);
+DigitalOut Motor_3d(p18);
+DigitalOut Motor_4d(p17);
+DigitalOut ENpin(p29);
+
+DigitalIn Control_1(p25);//Motor Input
+DigitalIn Control_2(p26);
+DigitalIn Control_3(p30);//Modified from 27 to 30.
+DigitalIn Control_4(p28);
+
+
+
+
+//--------------------------------------------------------------------//
+//****************SINGLE MOTOR CONTROL********************************//  
+//--------------------------------------------------------------------//
+void F1(){ 
+    Motor_1p=0.4;
+    Motor_1d=0;
+    }   
+void F2(){ 
+    Motor_2p=0.4;
+    Motor_2d=0;
+    }  
+void F3(){ 
+    Motor_3p=0.4;
+    Motor_3d=0;
+    }   
+void F4(){ 
+    Motor_4p=0.4;
+    Motor_4d=0;
+    }    
+      
+void B1(){ 
+    Motor_1p=0.6;
+    Motor_1d=1;
+    }   
+void B2(){ 
+    Motor_2p=0.6;
+    Motor_2d=1;
+    }  
+void B3(){ 
+    Motor_3p=0.6;
+    Motor_3d=1;
+    }   
+void B4(){ 
+    Motor_4p=0.6;
+    Motor_4d=1;
+    }     
+    
+void Stop(){ 
+    Motor_1p=0;
+    Motor_2p=0;
+    Motor_3p=0;
+    Motor_4p=0; 
+    
+    Motor_1d=0;
+    Motor_2d=0;
+    Motor_3d=0;
+    Motor_4d=0; 
+    }
+
+//--------------------------------------------------------------------//
+//************************MOVE CONTROL********************************//
+//--------------------------------------------------------------------//
+void M8(){
+    Stop();
+    F1();  // L Front
+    B2();  // R Front
+    B3();  // L Rear
+    F4();  // R Rear
+    }
+void M1(){
+    Stop();
+    F1();
+    //2
+    //3
+    F4();
+    }
+void M2(){
+    Stop();
+    F1();
+    F2();
+    F3();
+    F4();
+    }
+void M3(){
+    Stop();
+    //1
+    F2();
+    F3();
+    //4
+    }
+void M4(){
+    Stop();
+    B1();
+    F2();
+    F3();
+    B4();
+    }
+void M5(){
+    Stop();
+    B1();
+    //2
+    //3
+    B4();
+    }
+void M6(){
+    Stop();
+    B1();
+    B2();
+    B3();
+    B4();
+    }
+void M7(){
+    Stop();
+    //1
+    B2();
+    B3();
+    //4
+    }
+void M9(){       //Turning Left
+    Stop();
+    B1();
+    F2();
+    B3();
+    F4();
+    }
+void M10(){     //Turning Right 
+    Stop();
+    F1();
+    B2();
+    F3();
+    B4();
+    }
+
+void Drive(int i){
+    switch(i){
+        case 0:Stop();break;
+        case 1:M1();break;
+        //Case 1 indicates the movement of moving upper right ↗
+        case 2:M2();break;
+        //Case 2 indicates the movement of moving forwards ↑    
+        case 3:M3();break;
+        //Case 3 indicates the movement of moving upper left ↖  
+        case 4:M4();break;
+         //Case 4 indicates the movement of moving upper left ←
+        case 5:M5();break;
+        //Case 5 indicates the movement of moving lower left ↙
+        case 6:M6();break;
+        //Case 6 indicates the movement of moving backwards ↓            
+        case 7:M7();break;
+        //Case 7 indicates the movement of moving lower right ↘
+        case 8:M8();break;
+        //Case 8 indicates the movement of moving right →  
+        case 9:M9();break; 
+        //Turning Left
+        case 10:M10();break;
+        //Turning Right 
+        default:Stop();break;            
+        }
+    }
+
+
+int main() {
+    ENpin=1;
+    int Move;
+    
+    while(1){
+        Move=8*Control_4+4*Control_3+2*Control_2+1*Control_1;
+        Drive(Move);
+        wait(0.05);
+        }
+}

@@ -1,0 +1,225 @@
+//This is applied on Arduino to read instructions and control other components.
+
+PS2X ps2x; 
+int TEST = 0;
+byte WorkMode = 0;
+int Move;
+int z=0;//Direction key
+int servo=129;
+int lock=1;
+byte vibrate=0;
+
+void setup() {
+
+for(int i=5;i<=9;i++){
+    pinMode(i,OUTPUT);
+      }
+
+Serial.begin(57600);
+
+  TEST = ps2x.config_gamepad(13, 11, 10, 12, true, true);  
+  if (TEST == 0) {
+    Serial.println("Connection is built successfully");
+  }
+  else
+    Serial.println("Connection is failed");
+
+  WorkMode = ps2x.readType();
+  if(WorkMode==1) 
+    Serial.println("Gamepad can work now");
+  else       
+    Serial.println("Gameapd cannot work normally");
+}
+
+int Obtain_Move(int x,int y,int z){       // Input:Key state
+                                          //Output:interger'Move'
+  int M;
+  if(z==0){
+  M=0;
+  if(x==255&&y==127)
+  M=8;
+  if(x>128&&x<=255&&y>=0&&y<127)
+  M=1;
+  if(x==128&&y==0)
+  M=2;
+  if(x>=0&&x<128&&y>=0&&y<127)
+  M=3;
+  if(x==0&&y==127)
+  M=4;
+  if(x>=0&&x<128&&y>127&&y<=255)
+  M=5;
+  if(x==128&&y==255)
+  M=6;
+  if(x>128&&x<=255&&y>127&&y<=255)
+  M=7;
+  if(x==128&&y==127)
+  M=0;  //parking state
+  }
+  else{
+    switch(z){
+    case 1:M=2;break;
+    case 2:M=6;break;
+    case 3:M=9;break;
+    case 4:M=10;break;
+    default:M=0;break;
+      }
+    }
+    return M;
+  }
+
+void Drive(int x){   //Input: integer 'Move' , Output:Voltages on pins
+  switch(x){
+    case 0:    
+    digitalWrite(5,0);
+    digitalWrite(6,0);
+    digitalWrite(7,0);   
+    digitalWrite(8,0);  break;  //Parking
+    case 1:    
+    //Case 1 indicates the movement of moving upper right ↗
+    digitalWrite(5,1);
+    //Only pin5 outputs high voltage, thus simulating a 
+    //4-bit binary number, 0001
+    digitalWrite(6,0);
+    digitalWrite(7,0);
+    digitalWrite(8,0);  break;
+    
+    case 2:   
+     //Case 2 indicates the movement of moving forwards ↑    
+    digitalWrite(5,0);
+    digitalWrite(6,1);
+    //4-bit binary number, 0010
+    digitalWrite(7,0);
+    digitalWrite(8,0);  break;
+    
+    case 3:    
+    //Case 3 indicates the movement of moving upper left ↖  
+    digitalWrite(5,1);
+    digitalWrite(6,1);
+       //4-bit binary number, 0011
+    digitalWrite(7,0);
+    digitalWrite(8,0);  break;
+    
+    case 4:    
+    //Case 4 indicates the movement of moving upper left ←
+    digitalWrite(5,0);
+    digitalWrite(6,0);
+    digitalWrite(7,1);
+    //4-bit binary number, 0100
+    digitalWrite(8,0);  break;
+    
+    case 5:   
+    //Case 5 indicates the movement of moving lower left ↙ 
+    digitalWrite(5,1);
+    digitalWrite(6,0);
+    digitalWrite(7,1);
+    //4-bit binary number, 0101
+    digitalWrite(8,0);  break;
+    
+    case 6: 
+    //Case 6 indicates the movement of moving backwards ↓    
+    digitalWrite(5,0);
+    digitalWrite(6,1);
+    digitalWrite(7,1);
+    //4-bit binary number, 0110
+    digitalWrite(8,0);  break;
+    
+    case 7:    
+    //Case 7 indicates the movement of moving lower right ↘   
+    digitalWrite(5,1);
+    digitalWrite(6,1);
+    digitalWrite(7,1);
+    //4-bit binary number, 0111
+    digitalWrite(8,0);  break;
+    
+    case 8:   
+    //Case 8 indicates the movement of moving right →  
+    digitalWrite(5,0);
+    digitalWrite(6,0);
+    digitalWrite(7,0);
+    digitalWrite(8,1);  
+    //4-bit binary number, 1000
+    break;    
+    
+    case 9:    
+    //Case 9 indicates the movement of turning LEFT    
+    digitalWrite(5,1);
+    digitalWrite(6,0);
+    digitalWrite(7,0);
+    digitalWrite(8,1); 
+    //4-bit binary number, 1001
+    break;   
+    
+    case 10:    
+    //Case 10 indicates the movement of turning RIGHT  
+    digitalWrite(5,0);
+    digitalWrite(6,1);
+    digitalWrite(7,0);
+    digitalWrite(8,1);  break; 
+    //4-bit binary number, 1010
+    
+    default:
+    digitalWrite(5,0);
+    //For unknow cases， stop the vehicle for safety
+    digitalWrite(6,0);
+    digitalWrite(7,0);
+    digitalWrite(8,0);
+    Serial.println("Direction unknown"); break;
+    }
+  }
+
+void Obtain_Servo(int x,int y){
+  if(x==128&&y==255)servo-=4;
+  if(x==128&&y==0)servo+=4;
+  if(servo<=27)servo=27;
+  if(servo>=249)servo=249;
+  }
+
+void Lock(){
+  if(ps2x.ButtonPressed(PSB_BLUE))lock=-lock;
+  if(lock==1){
+    Serial.println("Press X to UNLOCK the vehicle");
+    Move=0;
+    }
+  }
+
+void loop() {
+  if (TEST == 1)
+    return;
+    //At the begging of every loop,check the gamepad status
+    //If the gamepad is offline, breaks the loop
+    Move=0;
+    z=0;
+    
+    ps2x.read_gamepad(false, vibrate);       
+
+    //   ******************Direction Key********************* 
+    //   ******************Direction Key*********************
+    if (ps2x.Button(PSB_PAD_UP)) {        
+      z=1;                    
+    }
+    if (ps2x.Button(PSB_PAD_DOWN)) {
+      z=2;  
+    }
+    if (ps2x.Button(PSB_PAD_LEFT)) {
+      z=3; 
+    }   
+    if (ps2x.Button(PSB_PAD_RIGHT)) {
+      z=4; 
+    }   
+    //   ******************Direction Key*********************
+    //   ******************Direction Key*********************
+
+
+    //   ******************Joystick *********************
+    //   ******************Joystick *********************
+    Move=Obtain_Move(ps2x.Analog(PSS_LX),ps2x.Analog(PSS_LY),z); 
+    //To recognize the movement mode
+    Lock();
+    Drive(Move);
+    Obtain_Servo(ps2x.Analog(PSS_RX),ps2x.Analog(PSS_RY));
+    analogWrite(9,servo);
+ 
+    //   ******************Joystick *********************
+    //   ******************Joystick *********************
+  delay(50);
+}

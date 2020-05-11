@@ -1,0 +1,15 @@
+//This is for calling the camera on RaspberryPi
+
+import cv2
+
+cap = cv2.VideoCapture(0)
+
+while True:  
+    ret,frame=cap.read()
+    cv2.imshow("video",frame)
+    
+    if cv2.waitKey(30)&0xFF==ord('q'):
+        break
+
+cap.release()
+cv2.destroyAllWindows()

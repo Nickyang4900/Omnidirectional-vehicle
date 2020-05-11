@@ -1,2 +1,2 @@
 # Omnidirectional-vehicle
-The codes of Arduino，Mbed，RaspberryPi in this vehicle， and PPT file for presentation.
+The codes of Arduino，Mbed，RaspberryPi in this vehicle， and the PPT file for presentation.
